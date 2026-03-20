@@ -265,9 +265,17 @@ fn fetch_emails_sync(app: AppHandle) -> Result<usize, String> {
 }
 
 fn parse_email_date(date_str: &str) -> Option<String> {
+    // パース後にシステムのローカルタイム（JST等）に変換して保存する
+    // メールの Date ヘッダーが UTC (+0000) で送信される場合でも正しい日付になる
+    if let Ok(dt) = chrono::DateTime::parse_from_rfc2822(date_str) {
+        let local = dt.with_timezone(&chrono::Local);
+        return Some(local.format("%Y-%m-%d %H:%M:%S").to_string());
+    }
+    // フォールバック: mailparse でパースしてローカルタイムに変換
     let ts = mailparse::dateparse(date_str).ok()?;
-    let dt = chrono::Utc.timestamp_opt(ts, 0).single()?;
-    Some(dt.format("%Y-%m-%d %H:%M:%S").to_string())
+    let utc = chrono::Utc.timestamp_opt(ts, 0).single()?;
+    let local = utc.with_timezone(&chrono::Local);
+    Some(local.format("%Y-%m-%d %H:%M:%S").to_string())
 }
 
 fn extract_images(mail: &mailparse::ParsedMail) -> Vec<(String, Vec<u8>)> {

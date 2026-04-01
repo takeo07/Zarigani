@@ -310,6 +310,7 @@ onMounted(async () => {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -321,7 +322,7 @@ body {
 .app {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100dvh;
   overflow: hidden;
 }
 
@@ -334,6 +335,7 @@ body {
   color: white;
   padding: 12px 20px;
   flex-shrink: 0;
+  gap: 8px;
 }
 
 .header-nav {
@@ -347,14 +349,16 @@ body {
   border: none;
   color: white;
   font-size: 22px;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: background 0.2s;
+  touch-action: manipulation;
+  flex-shrink: 0;
 }
 
 .nav-btn:hover {
@@ -364,23 +368,28 @@ body {
 .month-title {
   font-size: 20px;
   font-weight: 600;
-  min-width: 140px;
+  min-width: 130px;
   text-align: center;
+  white-space: nowrap;
 }
 
 .header-actions {
   display: flex;
-  gap: 10px;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .action-btn {
   border: none;
   border-radius: 8px;
-  padding: 8px 16px;
+  padding: 10px 16px;
   font-size: 14px;
   cursor: pointer;
   font-family: inherit;
   transition: opacity 0.2s;
+  touch-action: manipulation;
+  min-height: 44px;
+  white-space: nowrap;
 }
 
 .action-btn:disabled {
@@ -407,7 +416,7 @@ body {
 .status-bar {
   background: #ffeaa7;
   color: #2d3436;
-  padding: 8px 20px;
+  padding: 8px 16px;
   font-size: 13px;
   display: flex;
   justify-content: space-between;
@@ -419,9 +428,12 @@ body {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 16px;
   color: #636e72;
-  padding: 0 4px;
+  padding: 4px 8px;
+  touch-action: manipulation;
+  min-width: 32px;
+  min-height: 32px;
 }
 
 /* Calendar */
@@ -433,6 +445,7 @@ body {
   flex: 1;
   overflow-y: auto;
   align-content: start;
+  -webkit-overflow-scrolling: touch;
 }
 
 .weekday-header {
@@ -445,6 +458,7 @@ body {
   position: sticky;
   top: 0;
   z-index: 1;
+  user-select: none;
 }
 
 .weekday-header.sunday {
@@ -460,6 +474,7 @@ body {
   min-height: 100px;
   padding: 6px;
   position: relative;
+  user-select: none;
 }
 
 .day-cell.empty {
@@ -504,6 +519,7 @@ body {
   cursor: pointer;
   border: 2px solid transparent;
   transition: border-color 0.2s, transform 0.1s;
+  touch-action: manipulation;
 }
 
 .thumbnail:hover {
@@ -546,12 +562,19 @@ body {
 .close-btn {
   background: none;
   border: none;
-  font-size: 18px;
+  font-size: 20px;
   cursor: pointer;
   color: #718096;
   padding: 4px 8px;
   border-radius: 4px;
   transition: background 0.2s;
+  touch-action: manipulation;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .close-btn:hover {
@@ -563,6 +586,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  overflow-y: auto;
 }
 
 .form-group {
@@ -580,8 +604,8 @@ body {
 .form-group input {
   border: 1px solid #cbd5e0;
   border-radius: 6px;
-  padding: 8px 12px;
-  font-size: 14px;
+  padding: 10px 12px;
+  font-size: 16px; /* 16px以上でiOSのズームを防ぐ */
   font-family: inherit;
   outline: none;
   transition: border-color 0.2s;
@@ -603,23 +627,27 @@ body {
   background: #edf2f7;
   border: none;
   border-radius: 6px;
-  padding: 8px 16px;
+  padding: 10px 16px;
   font-size: 14px;
   cursor: pointer;
   font-family: inherit;
   color: #4a5568;
+  min-height: 44px;
+  touch-action: manipulation;
 }
 
 .btn-save {
   background: #3182ce;
   border: none;
   border-radius: 6px;
-  padding: 8px 20px;
+  padding: 10px 20px;
   font-size: 14px;
   cursor: pointer;
   font-family: inherit;
   color: white;
   font-weight: 600;
+  min-height: 44px;
+  touch-action: manipulation;
 }
 
 .btn-save:hover {
@@ -648,7 +676,8 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 800px;
+  flex: 1;
+  min-width: 0;
 }
 
 .image-modal .close-btn {
@@ -666,6 +695,7 @@ body {
   justify-content: center;
   overflow: auto;
   flex: 1;
+  -webkit-overflow-scrolling: touch;
 }
 
 .full-image {
@@ -673,5 +703,119 @@ body {
   max-height: 70vh;
   object-fit: contain;
   border-radius: 4px;
+}
+
+/* ===== モバイル対応 (≤ 600px) ===== */
+@media (max-width: 600px) {
+  /* ヘッダー: 2行に折り返し */
+  .header {
+    flex-wrap: wrap;
+    padding: 8px 12px;
+    padding-top: max(8px, env(safe-area-inset-top));
+  }
+
+  .header-nav {
+    gap: 8px;
+    flex: 1;
+  }
+
+  .month-title {
+    font-size: 16px;
+    min-width: 0;
+  }
+
+  .nav-btn {
+    font-size: 20px;
+    width: 40px;
+    height: 40px;
+  }
+
+  .header-actions {
+    width: 100%;
+    gap: 6px;
+  }
+
+  .action-btn {
+    flex: 1;
+    font-size: 13px;
+    padding: 8px 10px;
+    min-height: 40px;
+    text-align: center;
+  }
+
+  /* カレンダー */
+  .weekday-header {
+    padding: 5px 0;
+    font-size: 11px;
+  }
+
+  .day-cell {
+    min-height: 60px;
+    padding: 3px;
+  }
+
+  .day-cell.today .day-number {
+    width: 20px;
+    height: 20px;
+    font-size: 11px;
+  }
+
+  .day-number {
+    font-size: 11px;
+    margin-bottom: 2px;
+  }
+
+  .thumbnails {
+    gap: 2px;
+    margin-top: 2px;
+  }
+
+  /* サムネイル: セル幅に合わせて自動調整 */
+  .thumbnail {
+    width: clamp(28px, calc(100vw / 7 - 10px), 52px);
+    height: clamp(28px, calc(100vw / 7 - 10px), 52px);
+    border-width: 1px;
+  }
+
+  /* モーダル: フルスクリーン */
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .modal {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 16px 16px 0 0;
+    max-height: 92dvh;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .modal-body {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    max-height: none;
+  }
+
+  /* 画像モーダル: フルスクリーン */
+  .image-modal {
+    width: 100%;
+    max-width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .image-modal .modal-header {
+    padding-top: max(16px, env(safe-area-inset-top));
+  }
+
+  .full-image {
+    max-height: calc(100dvh - 80px);
+  }
 }
 </style>

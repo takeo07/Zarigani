@@ -1,5 +1,6 @@
 use base64::{engine::general_purpose, Engine as _};
 use chrono::TimeZone;
+use keyring::Entry;
 use mailparse::{parse_mail, MailHeaderMap};
 use native_tls::TlsConnector;
 use rusqlite::{params, Connection};
@@ -7,6 +8,24 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 use tauri::{AppHandle, Manager};
+
+const KEYCHAIN_SERVICE: &str = "jp.geebee.zarigani";
+
+fn keychain_save(username: &str, password: &str) -> Result<(), String> {
+    let entry = Entry::new(KEYCHAIN_SERVICE, username).map_err(|e| e.to_string())?;
+    entry.set_password(password).map_err(|e| e.to_string())
+}
+
+fn keychain_load(username: &str) -> Option<String> {
+    let entry = Entry::new(KEYCHAIN_SERVICE, username).ok()?;
+    entry.get_password().ok()
+}
+
+fn keychain_delete(username: &str) {
+    if let Ok(entry) = Entry::new(KEYCHAIN_SERVICE, username) {
+        entry.delete_password().ok();
+    }
+}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Settings {
@@ -79,19 +98,51 @@ fn init_db(db_path: &PathBuf) -> Result<Connection, rusqlite::Error> {
 fn get_settings(app: AppHandle) -> Result<Settings, String> {
     ensure_dirs(&app);
     let path = get_settings_path(&app);
-    if path.exists() {
+    let mut settings = if path.exists() {
         let content = fs::read_to_string(&path).map_err(|e| e.to_string())?;
-        serde_json::from_str(&content).map_err(|e| e.to_string())
+        serde_json::from_str::<Settings>(&content).map_err(|e| e.to_string())?
     } else {
-        Ok(Settings::default())
+        Settings::default()
+    };
+
+    // 旧バージョンの settings.json にパスワードが残っていたら Keychain に移行
+    if !settings.password.is_empty() && !settings.username.is_empty() {
+        keychain_save(&settings.username, &settings.password)?;
+        let mut migrated = settings.clone();
+        migrated.password = String::new();
+        if let Ok(content) = serde_json::to_string_pretty(&migrated) {
+            fs::write(&path, content).ok();
+        }
+        return Ok(settings);
     }
+
+    // Keychain からパスワードを取得
+    if !settings.username.is_empty() {
+        settings.password = keychain_load(&settings.username).unwrap_or_default();
+    }
+
+    Ok(settings)
 }
 
 #[tauri::command]
 fn save_settings(app: AppHandle, settings: Settings) -> Result<(), String> {
     ensure_dirs(&app);
+
+    // パスワードを Keychain に保存
+    if !settings.username.is_empty() {
+        if settings.password.is_empty() {
+            // パスワードが空になった場合は Keychain からも削除
+            keychain_delete(&settings.username);
+        } else {
+            keychain_save(&settings.username, &settings.password)?;
+        }
+    }
+
+    // JSON にはパスワードを含めずに保存
+    let mut settings_for_file = settings;
+    settings_for_file.password = String::new();
     let path = get_settings_path(&app);
-    let content = serde_json::to_string_pretty(&settings).map_err(|e| e.to_string())?;
+    let content = serde_json::to_string_pretty(&settings_for_file).map_err(|e| e.to_string())?;
     fs::write(&path, content).map_err(|e| e.to_string())
 }
 

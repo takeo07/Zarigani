@@ -294,6 +294,7 @@ onMounted(async () => {
     <div v-if="showImage" class="modal-overlay" @click.self="showImage = false">
       <div class="image-modal">
         <div class="modal-header">
+          <button class="back-btn" @click="showImage = false">‹ 戻る</button>
           <h2 class="image-title">{{ selectedImageTitle }}</h2>
           <button class="close-btn" @click="showImage = false">✕</button>
         </div>
@@ -680,6 +681,23 @@ body {
   min-width: 0;
 }
 
+.back-btn {
+  background: none;
+  border: none;
+  color: #63b3ed;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: inherit;
+  touch-action: manipulation;
+  min-width: 44px;
+  min-height: 44px;
+  display: none;
+  align-items: center;
+  flex-shrink: 0;
+}
+
 .image-modal .close-btn {
   color: #a0aec0;
 }
@@ -812,6 +830,14 @@ body {
 
   .image-modal .modal-header {
     padding-top: max(16px, env(safe-area-inset-top));
+  }
+
+  .back-btn {
+    display: flex;
+  }
+
+  .image-modal .close-btn {
+    display: none;
   }
 
   .full-image {
